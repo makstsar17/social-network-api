@@ -1,13 +1,14 @@
 {
   "name": "social-network-api",
   "version": "1.0.0",
-  "main": "dist/index.js",
+  "main": "dist/server.js",
   "repository": "git@github.com:makstsar17/social-network-api.git",
   "author": "Макс Царьов <makstsar1701@gmail.com>",
   "license": "MIT",
   "dependencies": {
     "dotenv": "^16.4.7",
-    "express": "^4.21.2"
+    "express": "^4.21.2",
+    "mongoose": "^8.9.3"
   },
   "devDependencies": {
     "@types/express": "^5.0.0",
@@ -18,7 +19,7 @@
   },
   "scripts": {
     "build": "tsc",
-    "start": "node dist/index.js",
-    "dev": "nodemon src/index.ts"
+    "start": "node dist/server.js",
+    "dev": "nodemon src/server.ts"
   }
 }
