@@ -1,10 +1,13 @@
 import app from "./app";
+import connectDB from "./config/db";
 import { env } from "./config/env";
 
 const port = env.PORT;
 
 async function main() {
     try {
+        await connectDB();
+        
         app.listen(port, () => {
             console.log(`server listening on ${port}`)
         })
