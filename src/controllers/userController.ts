@@ -39,7 +39,12 @@ export const userController = {
                 createdAt: user.createdAt,
                 avatarUrl: user.avatarUrl!
             });
-        
-        } catch (err){}
+
+        } catch (err) { 
+            console.error("Error in register: ", err);
+            res.status(HTTP_CODES.INTERNAL_SERVER_ERROR).send({
+                "error": "Internal Server Error"
+            })
+         }
     }
 }
