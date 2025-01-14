@@ -1,5 +1,5 @@
 import app from "./app";
-import connectDB from "./config/db";
+import { connectMongoDB, connectRedis } from "./config/db";
 import { env } from "./config/env";
 import fs from "fs";
 import path from "path";
@@ -17,7 +17,8 @@ async function main() {
             }
         })
 
-        await connectDB();
+        await connectMongoDB();
+        await connectRedis();
 
         app.listen(port, () => {
             console.log(`server listening on ${port}`)

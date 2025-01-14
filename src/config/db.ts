@@ -1,19 +1,30 @@
 import mongoose from "mongoose";
 import { env } from "./env";
+import { createClient } from "redis";
 
-const uri = env.MONGO_URI
 
-export default async function connectDB() {
+export async function connectMongoDB() {
     const dbConnection = mongoose.connection;
 
     dbConnection.once("open", (_) => {
-        console.log(`Database connected: ${uri}`);
+        console.log(`Mongo database connected: ${env.MONGO_URI}`);
     });
 
     dbConnection.on("error", (err) => {
-        console.error(`Database connection error: ${err}`);
+        throw err;
     })
 
+    await mongoose.connect(env.MONGO_URI);
+}
 
-    await mongoose.connect(uri);
+export async function connectRedis() {
+    const client = createClient({
+        url: env.REDIS_URI,
+    })
+
+    client.on("error", (err) => {
+        throw err;
+    });
+
+    await client.connect();
 }
