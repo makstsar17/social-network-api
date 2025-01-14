@@ -1,14 +1,14 @@
-import { model, Schema } from "mongoose"
+import { model, Schema } from "mongoose";
 
 const UserSchema = new Schema({
     email: { type: String, required: true, unique: true },
-    password: { type: String, required: true} ,
+    password: { type: String, required: true },
     name: { type: String, required: true },
-    avatarUrl: String, 
+    avatarUrl: String,
     dateOfBirth: Date,
     createdAt: { type: Date, default: Date.now },
     updatedAt: Date,
-    bio: String, 
+    bio: String,
     location: String,
     posts: [{ type: Schema.Types.ObjectId, ref: 'Post' }],
     followers: [{ type: Schema.Types.ObjectId, ref: 'User' }],

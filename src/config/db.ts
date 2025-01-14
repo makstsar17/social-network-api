@@ -5,7 +5,7 @@ const uri = env.MONGO_URI
 
 export default async function connectDB() {
     const dbConnection = mongoose.connection;
-    
+
     dbConnection.once("open", (_) => {
         console.log(`Database connected: ${uri}`);
     });
@@ -14,6 +14,6 @@ export default async function connectDB() {
         console.error(`Database connection error: ${err}`);
     })
 
-    
+
     await mongoose.connect(uri);
 }

@@ -1,4 +1,4 @@
-import express from 'express'
+import express from "express";
 
 import { emailValidator, nameValidator, passwordValidator } from '../middlewares/validators';
 import { validationResultMiddleware } from '../middlewares/validationResult';

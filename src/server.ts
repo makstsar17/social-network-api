@@ -1,8 +1,8 @@
 import app from "./app";
 import connectDB from "./config/db";
 import { env } from "./config/env";
-import fs from 'fs'
-import path from 'path'
+import fs from "fs";
+import path from "path";
 
 const port = env.PORT;
 
@@ -24,7 +24,7 @@ async function main() {
         })
     } catch (error) {
         console.error("Error starting the server:", error);
-        process.exit(1); 
+        process.exit(1);
     }
 }
 
