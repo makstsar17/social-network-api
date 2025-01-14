@@ -25,5 +25,15 @@ export const UserService = {
             return true;
         }
         return false;
+    },
+
+    getUserByEmail: async (email: string) => {
+        try {
+            const result = await UserModel.findOne({ email });
+            return result?.toObject();
+        } catch (err) {
+            console.error("Error getting user by email: ", err);
+            throw err;
+        }
     }
 }

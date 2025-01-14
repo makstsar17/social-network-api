@@ -1,4 +1,7 @@
 export const HTTP_CODES = {
     BAD_REQUEST: 400,
     CREATED: 201,
+    UNAUTHORIZED: 401,
+    OK: 200,
+    INTERNAL_SERVER_ERROR: 500,
 } as const;

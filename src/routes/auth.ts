@@ -8,4 +8,6 @@ const authRouter = express.Router();
 
 authRouter.post('/register', [emailValidator, passwordValidator, nameValidator], validationResultMiddleware, userController.register);
 
+authRouter.post('/login', [emailValidator, passwordValidator], validationResultMiddleware, userController.login);
+
 export default authRouter;
