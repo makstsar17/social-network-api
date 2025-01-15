@@ -11,7 +11,8 @@ import { randomUUID } from "crypto";
 import { LoginUserRequestModel, LoginUserResponseModel } from "./models/LoginUserModel";
 import jwt from "jsonwebtoken";
 import { env } from "../config/env";
-
+import { Request } from "express";
+import { TokenService } from "../services/TokenService";
 
 export const userController = {
     register: async (req: RequestWithBody<RegisterUserRequestModel>, res: ResponseWithError<RegisterUserResponseModel>) => {
@@ -46,7 +47,7 @@ export const userController = {
         } catch (err) {
             console.error("Error in register: ", err);
             res.status(HTTP_CODES.INTERNAL_SERVER_ERROR).send({
-                "error": "Internal Server Error"
+                error: "Internal Server Error"
             })
         }
     },
@@ -57,7 +58,7 @@ export const userController = {
 
             if (!user) {
                 res.status(HTTP_CODES.UNAUTHORIZED)
-                    .send({ "error": "Invalid email or password" });
+                    .send({ error: "Invalid email or password" });
                 return;
             }
 
@@ -65,22 +66,77 @@ export const userController = {
 
             if (!validPassword) {
                 res.status(HTTP_CODES.UNAUTHORIZED)
-                    .send({ "error": "Invalid email or password" });
+                    .send({ error: "Invalid email or password" });
+                return;
             }
 
-            const accessToken = jwt.sign({ "email": req.body.email }, env.JWT_ACCESS_SECRET_KEY, { expiresIn: '10m' });
-            const refreshToken = jwt.sign({ "email": req.body.email }, env.JWT_REFRESH_SECRET_KEY, { expiresIn: '1d' });
+            const accessToken = jwt.sign({ id: user._id }, env.JWT_ACCESS_SECRET_KEY, { expiresIn: '10m' });
+            const refreshToken = jwt.sign({ id: user._id }, env.JWT_REFRESH_SECRET_KEY, { expiresIn: '1d' });
             res.cookie('jwt-refresh', refreshToken, { httpOnly: true, secure: true, sameSite: 'strict', maxAge: 24 * 60 * 60 * 1000 });
 
             res.status(HTTP_CODES.OK).send({
-                "token": accessToken
+                token: accessToken
             })
         }
         catch (err) {
             console.error("Error in login: ", err);
             res.status(HTTP_CODES.INTERNAL_SERVER_ERROR).send({
-                "error": "Internal Server Error"
+                error: "Internal Server Error"
             })
+        }
+    },
+
+    refresh_token: async (req: Request, res: ResponseWithError<LoginUserResponseModel>) => {
+        const refreshToken = req.cookies["jwt-refresh"];
+        if (!refreshToken) {
+            res.status(HTTP_CODES.UNAUTHORIZED).send({
+                error: "Refresh token not found, please login again"
+            });
+            return;
+        }
+
+        if (await TokenService.isTokenBlacklisted(refreshToken)) {
+            res.status(HTTP_CODES.FORBIDDEN).send({
+                error: "Invalid refresh token"
+            });
+            return;
+        }
+
+        try {
+            const user = jwt.verify(refreshToken, env.JWT_REFRESH_SECRET_KEY) as { id: string };
+            const accessToken = jwt.sign({ id: user.id }, env.JWT_ACCESS_SECRET_KEY, { expiresIn: '10m' });
+
+            res.status(HTTP_CODES.OK).send({
+                token: accessToken
+            });
+        } catch (err) {
+            res.status(HTTP_CODES.FORBIDDEN).send({
+                error: "Invalid or expired refresh token"
+            });
+        }
+
+    },
+
+    logout: async (req: Request, res: ResponseWithError<{}>) => {
+        const refreshToken = req.cookies["jwt-refresh"];
+
+        if (!refreshToken) {
+            res.status(HTTP_CODES.BAD_REQUEST).send({
+                error: "Refresh token not found"
+            });
+            return;
+        }
+
+        try{
+            jwt.verify(refreshToken, env.JWT_REFRESH_SECRET_KEY);
+            await TokenService.setTokenToBlackList(refreshToken, 60 * 60 * 24);
+            res.clearCookie("jwt-refresh");
+
+            await TokenService.setTokenToBlackList(req.headers["authorization"]!.split(" ")[1], 60*10);
+        } catch (err) {
+            res.status(HTTP_CODES.BAD_REQUEST).send({
+                error: "Invalid refresh token"
+            });
         }
     }
 }

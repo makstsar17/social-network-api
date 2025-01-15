@@ -2,12 +2,13 @@ import { NextFunction, Request, Response } from "express";
 import { HTTP_CODES } from "../constants/httpCodes";
 import jwt from "jsonwebtoken";
 import { env } from "../config/env";
+import { TokenService } from "../services/TokenService";
 
 interface AuthenticatedRequest extends Request {
     user?: string | jwt.JwtPayload;
 }
 
-export const authMiddleware = (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+export const authMiddleware = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     const authHeader = req.headers["authorization"];
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
         res.status(HTTP_CODES.UNAUTHORIZED).send({ error: "Invalid authorization header" });
@@ -20,12 +21,19 @@ export const authMiddleware = (req: AuthenticatedRequest, res: Response, next: N
         return;
     }
 
+    if (await TokenService.isTokenBlacklisted(token)) {
+        res.status(HTTP_CODES.FORBIDDEN).send({
+            error: "Invalid token"
+        })
+        return;
+    }
+
     jwt.verify(token, env.JWT_ACCESS_SECRET_KEY, (err, decoded) => {
         if (err) {
             res.status(HTTP_CODES.UNAUTHORIZED).send({ error: "Invalid token" });
             return;
         }
-        req.user = decoded;
+        req.user = decoded as { id: string };
         next();
     })
 }

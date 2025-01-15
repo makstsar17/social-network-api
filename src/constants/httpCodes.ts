@@ -4,4 +4,5 @@ export const HTTP_CODES = {
     UNAUTHORIZED: 401,
     OK: 200,
     INTERNAL_SERVER_ERROR: 500,
+    FORBIDDEN: 403,
 } as const;

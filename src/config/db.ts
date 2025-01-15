@@ -17,11 +17,12 @@ export async function connectMongoDB() {
     await mongoose.connect(env.MONGO_URI);
 }
 
-export async function connectRedis() {
-    const client = createClient({
-        url: env.REDIS_URI,
-    })
+export const client = createClient({
+    url: env.REDIS_URI,
+})
 
+export async function connectRedis() {
+    
     client.on("error", (err) => {
         throw err;
     });
