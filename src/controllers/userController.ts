@@ -2,8 +2,8 @@ import path from "path";
 import { HTTP_CODES } from "../constants/httpCodes";
 import { UserService } from "../services/UserService";
 import { RegisterUserRequestModel, RegisterUserResponseModel } from "./models/RegisterUserModels";
-import { RequestWithBody } from "./requestTypes";
-import { ResponseWithError } from "./responseTypes";
+import { RequestWithBody, RequestWithParams } from "./types/requestTypes";
+import { ResponseWithError } from "./types/responseTypes";
 import bcrypt from "bcrypt";
 import fs from "fs";
 import jdenticon from "jdenticon";
@@ -13,6 +13,8 @@ import jwt from "jsonwebtoken";
 import { env } from "../config/env";
 import { Request } from "express";
 import { TokenService } from "../services/TokenService";
+import { URIParamsUserModel } from "./models/URIParamsUserModel";
+import { ResponseUserModel } from "./models/ResponseUserModel";
 
 export const userController = {
     register: async (req: RequestWithBody<RegisterUserRequestModel>, res: ResponseWithError<RegisterUserResponseModel>) => {
@@ -127,15 +129,55 @@ export const userController = {
             return;
         }
 
-        try{
+        try {
             jwt.verify(refreshToken, env.JWT_REFRESH_SECRET_KEY);
             await TokenService.setTokenToBlackList(refreshToken, 60 * 60 * 24);
             res.clearCookie("jwt-refresh");
 
-            await TokenService.setTokenToBlackList(req.headers["authorization"]!.split(" ")[1], 60*10);
+            await TokenService.setTokenToBlackList(req.headers["authorization"]!.split(" ")[1], 60 * 10);
+            res.sendStatus(HTTP_CODES.NO_CONTENT);
         } catch (err) {
             res.status(HTTP_CODES.BAD_REQUEST).send({
                 error: "Invalid refresh token"
+            });
+        }
+    },
+
+    getUserById: async (req: RequestWithParams<URIParamsUserModel>, res: ResponseWithError<ResponseUserModel>) => {
+        const id = req.params.id;
+        try {
+            if (!UserService.validateId(id)) {
+                res.status(HTTP_CODES.BAD_REQUEST).send({
+                    error: "Invalid user ID"
+                });
+                return;
+            }
+
+            const user = await UserService.getUserById(id);
+            if (!user) {
+                res.status(HTTP_CODES.NOT_FOUND).send({
+                    error: "User not found"
+                })
+                return;
+            }
+
+            const isFollowing = await UserService.checkFollowersIncludeId(user._id, req.user!.id);
+            res.status(HTTP_CODES.OK).send({
+                email: user.email,
+                name: user.name,
+                avatarUrl: user.avatarUrl!,
+                dateOfBirth: user.dateOfBirth,
+                bio: user.bio,
+                location: user.location,
+                posts: user.posts,
+                followers: user.followers,
+                following: user.following,
+                isFollowing
+            })
+        } catch (err) {
+            console.error(err);
+            res.status(HTTP_CODES.INTERNAL_SERVER_ERROR).send({
+                error: "Server error"
             });
         }
     }

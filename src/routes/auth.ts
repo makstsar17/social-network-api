@@ -11,8 +11,6 @@ authRouter.post('/register', [emailValidator, passwordValidator, nameValidator],
 
 authRouter.post('/login', [emailValidator, passwordValidator], validationResultMiddleware, userController.login);
 
-// - refresh token  
-//-logout token;
 authRouter.post('/refresh-token', userController.refresh_token);
 
 authRouter.post('/logout', authMiddleware, userController.logout);

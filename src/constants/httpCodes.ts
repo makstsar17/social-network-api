@@ -5,4 +5,6 @@ export const HTTP_CODES = {
     OK: 200,
     INTERNAL_SERVER_ERROR: 500,
     FORBIDDEN: 403,
+    NOT_FOUND: 404,
+    NO_CONTENT: 204
 } as const;
