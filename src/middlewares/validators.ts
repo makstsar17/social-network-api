@@ -29,3 +29,35 @@ export const passwordValidator = body("password")
     .withMessage("Password must contain at least one number")
     .matches(/[@$!%*?&]/)
     .withMessage("Password must contain at least one special character");
+
+export const optionalNameValidator = body("name")
+    .optional()
+    .isString()
+    .trim()
+    .isLength({ min: 3, max: 50 })
+    .withMessage("Name must be a string between 3 and 50 characters long");
+
+export const optionalEmailValidator = body("email")
+    .optional()
+    .isString()
+    .withMessage("Request have include string email parameter")
+    .bail()
+    .isEmail()
+    .withMessage("Invalid email format");
+
+export const dateOfBirthValidator = body("dateOfBirth")
+    .optional()
+    .isDate()
+    .withMessage("Must be a valid date");
+
+export const bioValidator = body("bio")
+    .optional()
+    .isString()
+    .isLength({ max: 500 })
+    .withMessage("Bio must be a string with a maximum length of 500 characters");
+
+export const locationValidator = body("location")
+    .optional()
+    .isString()
+    .isLength({ max: 100 })
+    .withMessage("Location must be a string with a maximum length of 100 characters");

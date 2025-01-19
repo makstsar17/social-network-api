@@ -10,5 +10,5 @@ export type ResponseUserModel = {
     posts: mongoose.Types.ObjectId[],
     followers: mongoose.Types.ObjectId[],
     following: mongoose.Types.ObjectId[],
-    isFollowing: boolean,
+    isFollowing?: boolean,
 }

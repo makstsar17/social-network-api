@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import UserModel from "../models/UserModel"
+import UserModel from "../models/UserModel";
 
 
 export const UserService = {
@@ -38,5 +38,15 @@ export const UserService = {
 
     castStringtoObjectId: (id: string) => {
         return new mongoose.Types.ObjectId(id);
+    },
+
+    updateUser: async (userId: string, updateData: Object) => {
+        return await UserModel.findByIdAndUpdate(userId, updateData, { new: true }).lean();
+    },
+
+    getUserAvatarUrl: async (id: string) => {
+        const user = await UserModel.findById(id, 'avatarUrl').lean();
+        return user?.avatarUrl;
     }
+
 }

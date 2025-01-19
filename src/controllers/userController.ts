@@ -2,7 +2,7 @@ import path from "path";
 import { HTTP_CODES } from "../constants/httpCodes";
 import { UserService } from "../services/UserService";
 import { RegisterUserRequestModel, RegisterUserResponseModel } from "./models/RegisterUserModels";
-import { RequestWithBody, RequestWithParams } from "./types/requestTypes";
+import { RequestWithBody, RequestWithBodyAndParams, RequestWithParams } from "./types/requestTypes";
 import { ResponseWithError } from "./types/responseTypes";
 import bcrypt from "bcrypt";
 import fs from "fs";
@@ -13,8 +13,9 @@ import jwt from "jsonwebtoken";
 import { env } from "../config/env";
 import { Request } from "express";
 import { TokenService } from "../services/TokenService";
-import { URIParamsUserModel } from "./models/URIParamsUserModel";
+import { URIParamsUserIdModel } from "./models/URIParamsUserModel";
 import { ResponseUserModel } from "./models/ResponseUserModel";
+import { UpdateRequestUserModel } from "./models/UpdateRequestUserModel";
 
 export const userController = {
     register: async (req: RequestWithBody<RegisterUserRequestModel>, res: ResponseWithError<RegisterUserResponseModel>) => {
@@ -30,7 +31,7 @@ export const userController = {
             const hashedPassword = await bcrypt.hash(req.body.password, 10);
 
             const avatarName = `${randomUUID()}.png`
-            const avatarPath = path.join(__dirname, '/../../uploads', avatarName);
+            const avatarPath = path.join(env.AVATAR_PATH, avatarName);
             const avatarPng = jdenticon.toPng(avatarName, 250);
 
             fs.writeFile(avatarPath, avatarPng, (err) => {
@@ -143,7 +144,7 @@ export const userController = {
         }
     },
 
-    getUserById: async (req: RequestWithParams<URIParamsUserModel>, res: ResponseWithError<ResponseUserModel>) => {
+    getUserById: async (req: RequestWithParams<URIParamsUserIdModel>, res: ResponseWithError<ResponseUserModel>) => {
         const id = req.params.id;
         try {
             if (!UserService.validateId(id)) {
@@ -176,6 +177,50 @@ export const userController = {
             })
         } catch (err) {
             console.error(err);
+            res.status(HTTP_CODES.INTERNAL_SERVER_ERROR).send({
+                error: "Server error"
+            });
+        }
+    },
+
+    updateUser: async (req: RequestWithBodyAndParams<URIParamsUserIdModel, Partial<UpdateRequestUserModel>>,
+        res: ResponseWithError<ResponseUserModel>) => {
+        const id = req.params.id;
+        const { email, name, dateOfBirth, bio, location } = req.body;
+        const file = req.file;
+
+
+        if (id !== req.user!.id) {
+            res.status(HTTP_CODES.FORBIDDEN).send({ error: "Not allowed" });
+            return;
+        }
+
+        try {
+            const oldFilePath = (await UserService.getUserAvatarUrl(id));
+
+            const user = await UserService.updateUser(id, { email, name, dateOfBirth, bio, location, avatarUrl: file?.path });
+
+            if (user?.avatarUrl === file?.path) {
+                fs.unlink(oldFilePath!, (err) => {
+                    if (err) {
+                        console.error(err);
+                    }
+                });
+            }
+
+            res.status(HTTP_CODES.OK).send({
+                email: user!.email,
+                name: user!.name,
+                avatarUrl: user!.avatarUrl!,
+                dateOfBirth: user!.dateOfBirth,
+                bio: user!.bio,
+                location: user!.location,
+                posts: user!.posts,
+                followers: user!.followers,
+                following: user!.following,
+            });
+
+        } catch (err) {
             res.status(HTTP_CODES.INTERNAL_SERVER_ERROR).send({
                 error: "Server error"
             });
