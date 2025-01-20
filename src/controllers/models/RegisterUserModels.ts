@@ -5,6 +5,7 @@ export type RegisterUserRequestModel = {
 }
 
 export type RegisterUserResponseModel = {
+    id: string;
     email: string;
     name: string;
     createdAt: Date;

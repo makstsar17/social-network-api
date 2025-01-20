@@ -16,9 +16,15 @@ import { TokenService } from "../services/TokenService";
 import { URIParamsUserIdModel } from "./models/URIParamsUserModel";
 import { ResponseUserModel } from "./models/ResponseUserModel";
 import { UpdateRequestUserModel } from "./models/UpdateRequestUserModel";
+import { ServiceUserModel } from "../services/models/ServiceUserModel";
+
+function castServiceUserModeltoResponseUserModel(user: ServiceUserModel, isFollowing?: boolean): ResponseUserModel {
+    const { password, ...data } = user;
+    return { ...data, isFollowing };
+}
 
 export const userController = {
-    register: async (req: RequestWithBody<RegisterUserRequestModel>, res: ResponseWithError<RegisterUserResponseModel>) => {
+    register: async (req: RequestWithBody<RegisterUserRequestModel>, res: ResponseWithError<ResponseUserModel>) => {
         try {
             if (await UserService.checkUserWithEmail(req.body.email)) {
                 res.status(HTTP_CODES.BAD_REQUEST)
@@ -38,14 +44,9 @@ export const userController = {
                 if (err) console.error(err);
             });
 
-            const user = await UserService.addUser(req.body.name, req.body.email, hashedPassword, avatarPath);
+            const user = await UserService.addUser(req.body.name, req.body.email, hashedPassword, avatarName);
 
-            res.status(HTTP_CODES.CREATED).send({
-                email: user.email,
-                name: user.name,
-                createdAt: user.createdAt,
-                avatarUrl: user.avatarUrl!
-            });
+            res.status(HTTP_CODES.CREATED).send(castServiceUserModeltoResponseUserModel(user));
 
         } catch (err) {
             console.error("Error in register: ", err);
@@ -73,8 +74,8 @@ export const userController = {
                 return;
             }
 
-            const accessToken = jwt.sign({ id: user._id }, env.JWT_ACCESS_SECRET_KEY, { expiresIn: '10m' });
-            const refreshToken = jwt.sign({ id: user._id }, env.JWT_REFRESH_SECRET_KEY, { expiresIn: '1d' });
+            const accessToken = jwt.sign({ id: user.id }, env.JWT_ACCESS_SECRET_KEY, { expiresIn: '10m' });
+            const refreshToken = jwt.sign({ id: user.id }, env.JWT_REFRESH_SECRET_KEY, { expiresIn: '1d' });
             res.cookie('jwt-refresh', refreshToken, { httpOnly: true, secure: true, sameSite: 'strict', maxAge: 24 * 60 * 60 * 1000 });
 
             res.status(HTTP_CODES.OK).send({
@@ -162,19 +163,9 @@ export const userController = {
                 return;
             }
 
-            const isFollowing = await UserService.checkFollowersIncludeId(user._id, req.user!.id);
-            res.status(HTTP_CODES.OK).send({
-                email: user.email,
-                name: user.name,
-                avatarUrl: user.avatarUrl!,
-                dateOfBirth: user.dateOfBirth,
-                bio: user.bio,
-                location: user.location,
-                posts: user.posts,
-                followers: user.followers,
-                following: user.following,
-                isFollowing
-            })
+            const isFollowing = await UserService.checkFollowersIncludeId(user.id, req.user!.id);
+
+            res.status(HTTP_CODES.OK).send(castServiceUserModeltoResponseUserModel(user, isFollowing));
         } catch (err) {
             console.error(err);
             res.status(HTTP_CODES.INTERNAL_SERVER_ERROR).send({
@@ -188,42 +179,49 @@ export const userController = {
         const id = req.params.id;
         const { email, name, dateOfBirth, bio, location } = req.body;
         const file = req.file;
-
-
         if (id !== req.user!.id) {
-            res.status(HTTP_CODES.FORBIDDEN).send({ error: "Not allowed" });
+            res.status(HTTP_CODES.FORBIDDEN).send({
+                error: "Not allowed"
+            });
+            deleteFile(file?.path);
+            return;
+        }
+
+        if (email && await UserService.checkUserWithEmail(email)) {
+            res.status(HTTP_CODES.BAD_REQUEST)
+                .send({
+                    error: "User with that email is already registered"
+                });
+            deleteFile(file?.path);
             return;
         }
 
         try {
-            const oldFilePath = (await UserService.getUserAvatarUrl(id));
+            const oldFileName = (await UserService.getUserAvatarUrl(id));
 
-            const user = await UserService.updateUser(id, { email, name, dateOfBirth, bio, location, avatarUrl: file?.path });
+            const user = await UserService.updateUser(id, { email, name, dateOfBirth, bio, location, avatarUrl: file?.filename });
 
-            if (user?.avatarUrl === file?.path) {
-                fs.unlink(oldFilePath!, (err) => {
-                    if (err) {
-                        console.error(err);
-                    }
-                });
+            if (user?.avatarUrl === file?.filename) {
+                deleteFile(path.join(env.AVATAR_PATH, oldFileName!));
             }
 
-            res.status(HTTP_CODES.OK).send({
-                email: user!.email,
-                name: user!.name,
-                avatarUrl: user!.avatarUrl!,
-                dateOfBirth: user!.dateOfBirth,
-                bio: user!.bio,
-                location: user!.location,
-                posts: user!.posts,
-                followers: user!.followers,
-                following: user!.following,
-            });
+            res.status(HTTP_CODES.OK).send(castServiceUserModeltoResponseUserModel(user!));
+
 
         } catch (err) {
             res.status(HTTP_CODES.INTERNAL_SERVER_ERROR).send({
                 error: "Server error"
             });
         }
+    }
+}
+
+function deleteFile(fileUrl?: string) {
+    if (fileUrl) {
+        fs.unlink(fileUrl, (err) => {
+            if (err) {
+                console.error(err);
+            }
+        })
     }
 }

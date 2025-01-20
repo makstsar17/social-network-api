@@ -1,14 +1,15 @@
-import mongoose from "mongoose";
-
 export type ResponseUserModel = {
+    id: string,
     email: string,
     name: string,
     avatarUrl: string,
     dateOfBirth?: Date | null,
+    createdAt: Date,
+    updatedAt?: Date | null,
     bio?: string | null,
     location?: string | null,
-    posts: mongoose.Types.ObjectId[],
-    followers: mongoose.Types.ObjectId[],
-    following: mongoose.Types.ObjectId[],
+    posts: string[],
+    followers: string[],
+    following: string[],
     isFollowing?: boolean,
 }

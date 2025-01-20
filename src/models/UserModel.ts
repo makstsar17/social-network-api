@@ -1,6 +1,22 @@
-import { model, Schema } from "mongoose";
+import mongoose, { model, Schema } from "mongoose";
 
-const UserSchema = new Schema({
+export interface IUser {
+    email: string,
+    password: string,
+    name: string,
+    avatarUrl: string,
+    dateOfBirth?: Date,
+    createdAt: Date,
+    updatedAt?: Date,
+    bio?: string,
+    location?: string,
+    posts: mongoose.Types.ObjectId[],
+    followers: mongoose.Types.ObjectId[],
+    following: mongoose.Types.ObjectId[],
+
+}
+
+const UserSchema = new Schema<IUser>({
     email: { type: String, required: true, unique: true },
     password: { type: String, required: true },
     name: { type: String, required: true },
