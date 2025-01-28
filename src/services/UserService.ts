@@ -74,6 +74,14 @@ export const UserService = {
     getUserAvatarUrl: async (id: string): Promise<string | undefined> => {
         const user = await UserModel.findById(id, 'avatarUrl').lean();
         return user?.avatarUrl;
+    },
+
+    addPostIdToUser: async (userId: string, postId: string) => {
+        await UserModel.findByIdAndUpdate(userId, { $push: { posts: postId } });
+    },
+
+    deletePostIdInUser: async (userId: string, postId: string) => {
+        await UserModel.findByIdAndUpdate(userId, { $pull: { posts: postId } });
     }
 
 }

@@ -1,6 +1,14 @@
-import { model, Schema } from "mongoose";
+import mongoose, { model, Schema } from "mongoose";
 
-const PostSchema = new Schema({
+export interface IPost {
+    content: string,
+    userId: mongoose.Types.ObjectId,
+    likes: mongoose.Types.ObjectId[],
+    comments: mongoose.Types.ObjectId[],
+    createdAt: Date
+}
+
+const PostSchema = new Schema<IPost>({
     content: { type: String, required: true },
     userId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
     likes: [{ type: Schema.Types.ObjectId, ref: 'User' }],

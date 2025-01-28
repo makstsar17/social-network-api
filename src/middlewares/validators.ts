@@ -1,4 +1,4 @@
-import { body } from "express-validator";
+import { body, param } from "express-validator";
 
 export const nameValidator = body("name")
     .isString()
@@ -61,3 +61,14 @@ export const locationValidator = body("location")
     .isString()
     .isLength({ max: 100 })
     .withMessage("Location must be a string with a maximum length of 100 characters");
+
+export const contentValidator = body("content")
+    .isString()
+    .withMessage("Request have include content parameter")
+    .isLength({ max: 280 })
+    .withMessage("Content must be maximum 280 characters long");
+
+export const idValidator = param("id")
+    .isString()
+    .isLength({ min: 24, max: 24 })
+    .withMessage("Should have id in path");
