@@ -34,6 +34,11 @@ export const PostService = {
         return posts.map(castDBPostModeltoServicePostModel);
     },
 
+    getPostsWithFilter: async (filter: Object): Promise<ServicePostModel[]> => {
+        const posts = await PostModel.find(filter).exec();
+        return posts.map(castDBPostModeltoServicePostModel);
+    },
+
     getPostById: async (postId: string): Promise<ServicePostModel | null> => {
         const post = await PostModel.findById(postId).exec();
         if (!post) {

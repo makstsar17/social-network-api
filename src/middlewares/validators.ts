@@ -1,4 +1,4 @@
-import { body, param } from "express-validator";
+import { body, param, query } from "express-validator";
 
 export const nameValidator = body("name")
     .isString()
@@ -72,3 +72,9 @@ export const idValidator = param("id")
     .isString()
     .isLength({ min: 24, max: 24 })
     .withMessage("Should have id in path");
+
+export const userIdQueryValidator = query("userId")
+    .optional()
+    .isString()
+    .isLength({ min: 24, max: 24 })
+    .withMessage("Invaild userId in query");

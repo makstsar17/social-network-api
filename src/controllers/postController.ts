@@ -2,10 +2,11 @@ import { HTTP_CODES } from "../constants/httpCodes";
 import { ServicePostModel } from "../services/models/ServicePostModel";
 import { PostService } from "../services/PostService";
 import { CreatePostModel } from "./models/CreatePostModel";
+import { QueryPostModel } from "./models/QueryPostModel";
 import { ResponsePostModel } from "./models/ResponsePostModel";
 import { URIParamsPostIdModel } from "./models/URIParamsPostIdModel";
 import { URIParamsUserIdModel } from "./models/URIParamsUserModel";
-import { RequestWithBody, RequestWithParams } from "./types/requestTypes";
+import { RequestWithBody, RequestWithParams, RequestWithQuery } from "./types/requestTypes";
 import { ResponseWithError } from "./types/responseTypes";
 
 export const postController = {
@@ -28,6 +29,23 @@ export const postController = {
             const postsWithLikeInfo = posts.map(post => addLikeInfo(post, req.user!.id));
 
             res.status(HTTP_CODES.OK).send(postsWithLikeInfo);
+        } catch (err) {
+            res.status(HTTP_CODES.INTERNAL_SERVER_ERROR).send({
+                error: "Server error"
+            });
+        }
+    },
+
+    getPosts: async (req: RequestWithQuery<QueryPostModel>, res: ResponseWithError<ResponsePostModel[]>) => {
+        try {
+            const filter = req.query;
+
+            const posts = await PostService.getPostsWithFilter(filter);
+
+            const postsWithLikeInfo = posts.map(post => addLikeInfo(post, req.user!.id));
+
+            res.status(HTTP_CODES.OK).send(postsWithLikeInfo);
+
         } catch (err) {
             res.status(HTTP_CODES.INTERNAL_SERVER_ERROR).send({
                 error: "Server error"

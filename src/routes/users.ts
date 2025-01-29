@@ -18,6 +18,5 @@ usersRouter.patch('/:id',
     upload.single('avatar'),
     userController.updateUser);
 
-usersRouter.get('/:id/posts', authMiddleware, idValidator, validationResultMiddleware, postController.getAllPostsByUserId);
 
 export default usersRouter;
