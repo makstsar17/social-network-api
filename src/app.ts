@@ -4,6 +4,7 @@ import cookieparser from "cookie-parser";
 import usersRouter from "./routes/users";
 import { errorHandler } from "./middlewares/errors";
 import { postsRouter } from "./routes/posts";
+import { commentsRouter } from "./routes/comments";
 
 const app: Express = express();
 
@@ -14,6 +15,7 @@ app.use(cookieparser());
 app.use('/auth', authRouter);
 app.use('/users', usersRouter);
 app.use('/posts', postsRouter);
+app.use('/comments', commentsRouter);
 
 app.use(errorHandler);
 

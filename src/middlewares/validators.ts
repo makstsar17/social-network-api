@@ -78,3 +78,8 @@ export const userIdQueryValidator = query("userId")
     .isString()
     .isLength({ min: 24, max: 24 })
     .withMessage("Invaild userId in query");
+
+export const postIdValidator = body("postId")
+    .isString()
+    .isLength({ min: 24, max: 24 })
+    .withMessage("Request must include postId");

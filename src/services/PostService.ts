@@ -64,5 +64,14 @@ export const PostService = {
         finally {
             await session.endSession();
         }
+    },
+
+    addCommentToPost: async (postId: string, commentId: string) => {
+        await PostModel.findByIdAndUpdate(postId, { $push: { comments: commentId } });
+    },
+
+    deleteCommentInPost: async (commentId: string, postId: string) => {
+        await PostModel.findByIdAndUpdate(postId, { $pull: { comments: commentId } });
     }
+
 }
