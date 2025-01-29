@@ -76,7 +76,12 @@ export const userController = {
 
             const accessToken = jwt.sign({ id: user.id }, env.JWT_ACCESS_SECRET_KEY, { expiresIn: '10m' });
             const refreshToken = jwt.sign({ id: user.id }, env.JWT_REFRESH_SECRET_KEY, { expiresIn: '1d' });
-            res.cookie('jwt-refresh', refreshToken, { httpOnly: true, secure: true, sameSite: 'strict', maxAge: 24 * 60 * 60 * 1000 });
+            res.cookie('jwt-refresh', refreshToken, { 
+                httpOnly: true, 
+                path: "/auth/refresh-token",
+                secure: true, 
+                sameSite: 'strict', 
+                maxAge: 24 * 60 * 60 * 1000 });
 
             res.status(HTTP_CODES.OK).send({
                 token: accessToken
