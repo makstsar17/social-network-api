@@ -74,6 +74,7 @@ export const postController = {
                 res.status(HTTP_CODES.NOT_FOUND).send({
                     error: "Post not found"
                 });
+                return;
             }
             const postsWithLikeInfo = addLikeInfo(post!, req.user!.id);
 
@@ -92,12 +93,14 @@ export const postController = {
                 res.status(HTTP_CODES.NOT_FOUND).send({
                     error: "Invalid post id"
                 });
+                return;
             }
 
             if (post!.userId !== req.user!.id) {
                 res.status(HTTP_CODES.FORBIDDEN).send({
                     error: "Not allowed"
                 });
+                return;
             }
 
             await PostService.deletePostById(req.params.id);
