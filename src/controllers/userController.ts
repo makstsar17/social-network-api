@@ -1,7 +1,7 @@
 import path from "path";
 import { HTTP_CODES } from "../constants/httpCodes";
 import { UserService } from "../services/UserService";
-import { RegisterUserRequestModel, RegisterUserResponseModel } from "./models/RegisterUserModels";
+import { RegisterUserRequestModel } from "./models/RegisterUserModels";
 import { RequestWithBody, RequestWithBodyAndParams, RequestWithParams } from "./types/requestTypes";
 import { ResponseWithError } from "./types/responseTypes";
 import bcrypt from "bcrypt";
@@ -17,7 +17,6 @@ import { URIParamsUserIdModel } from "./models/URIParamsUserModel";
 import { ResponseUserModel } from "./models/ResponseUserModel";
 import { UpdateRequestUserModel } from "./models/UpdateRequestUserModel";
 import { ServiceUserModel } from "../services/models/ServiceUserModel";
-import { FollowRequestModel } from "./models/FollowModel";
 import { URIParamsFollowingIdModel } from "./models/URIParamsFollowingIdModel";
 
 function castServiceUserModeltoResponseUserModel(user: ServiceUserModel, isFollowing?: boolean): ResponseUserModel {
@@ -223,8 +222,8 @@ export const userController = {
         }
     },
 
-    follow: async (req: RequestWithBody<FollowRequestModel>, res: ResponseWithError<ResponseUserModel>) => {
-        const followedUser = await UserService.getUserById(req.body.followingId);
+    follow: async (req: RequestWithParams<URIParamsFollowingIdModel>, res: ResponseWithError<ResponseUserModel>) => {
+        const followedUser = await UserService.getUserById(req.params.id);
         if (!followedUser) {
             res.status(HTTP_CODES.NOT_FOUND).send({
                 error: "User with followingId not found"
@@ -233,14 +232,14 @@ export const userController = {
         }
 
         const user = await UserService.getUserById(req.user!.id);
-        if (user!.following.includes(req.body.followingId)){
+        if (user!.following.includes(req.params.id)){
             res.status(HTTP_CODES.NOT_ALLOWED).send({
                 error: "User has already followed followingId"
             });
             return;
         }
 
-        if (req.body.followingId === req.user!.id) {
+        if (req.params.id === req.user!.id) {
             res.status(HTTP_CODES.NOT_ALLOWED).send({
                 error: "Users can't follow themselves"
             });
@@ -248,7 +247,7 @@ export const userController = {
         }
 
         try {
-            const user = await UserService.addFollowingIdToUser(req.user!.id, req.body.followingId);
+            const user = await UserService.addFollowingIdToUser(req.user!.id, req.params.id);
             res.status(HTTP_CODES.OK).send(castServiceUserModeltoResponseUserModel(user!));
         } catch (err) {
             res.status(HTTP_CODES.INTERNAL_SERVER_ERROR).send({
