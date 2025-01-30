@@ -110,7 +110,61 @@ export const postController = {
                 error: "Server error"
             });
         }
-    }
+    },
+
+    like: async (req: RequestWithParams<URIParamsPostIdModel>, res: ResponseWithError<ResponsePostModel>) => {
+        const post = await PostService.getPostById(req.params.id);
+
+        if (!post) {
+            res.status(HTTP_CODES.NOT_FOUND).send({
+                error: "Post not found"
+            });
+            return;
+        }
+
+        if (post.likes.includes(req.user!.id)) {
+            res.status(HTTP_CODES.NOT_ALLOWED).send({
+                error: "User has already liked post"
+            });
+            return;
+        }
+
+        try {
+            const likedPost = await PostService.addLikeToPost(req.params.id, req.user!.id);
+            res.status(HTTP_CODES.OK).send(likedPost);
+        } catch (err) {
+            res.status(HTTP_CODES.INTERNAL_SERVER_ERROR).send({
+                error: "Server error"
+            });
+        }
+    },
+
+    unlike: async (req: RequestWithParams<URIParamsPostIdModel>, res: ResponseWithError<ResponsePostModel>) => {
+        const post = await PostService.getPostById(req.params.id);
+
+        if (!post) {
+            res.status(HTTP_CODES.NOT_FOUND).send({
+                error: "Post not found"
+            });
+            return;
+        }
+
+        if (!post.likes.includes(req.user!.id)) {
+            res.status(HTTP_CODES.NOT_ALLOWED).send({
+                error: "User hasn't liked post"
+            });
+            return;
+        }
+
+        try {
+            const likedPost = await PostService.deleteLikeInPost(req.params.id, req.user!.id);
+            res.status(HTTP_CODES.OK).send(likedPost);
+        } catch (err) {
+            res.status(HTTP_CODES.INTERNAL_SERVER_ERROR).send({
+                error: "Server error"
+            });
+        }
+    },
 };
 
 function addLikeInfo(post: ServicePostModel, userId: string): ResponsePostModel {

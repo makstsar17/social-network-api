@@ -72,6 +72,15 @@ export const PostService = {
 
     deleteCommentInPost: async (commentId: string, postId: string) => {
         await PostModel.findByIdAndUpdate(postId, { $pull: { comments: commentId } });
-    }
+    },
 
+    addLikeToPost: async (postId: string, userId: string) => {
+        const post = await PostModel.findByIdAndUpdate(postId, { $push: { likes: userId } }, { returnDocument: "after" });
+        return castDBPostModeltoServicePostModel(post!);
+    },
+
+    deleteLikeInPost: async (postId: string, userId: string) => {
+        const post = await PostModel.findByIdAndUpdate(postId, { $pull: { likes: userId } }, { returnDocument: "after" });
+        return castDBPostModeltoServicePostModel(post!);
+    }
 }

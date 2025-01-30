@@ -15,3 +15,7 @@ postsRouter.get('/following', authMiddleware, postController.getAllPostsForUser)
 postsRouter.get('/:id', authMiddleware, idValidator, validationResultMiddleware, postController.getPostById);
 
 postsRouter.delete('/:id', authMiddleware, idValidator, validationResultMiddleware, postController.deletePostById);
+
+postsRouter.patch('/like/:id', authMiddleware, idValidator, validationResultMiddleware, postController.like);
+
+postsRouter.patch('/unlike/:id', authMiddleware, idValidator, validationResultMiddleware, postController.unlike);
