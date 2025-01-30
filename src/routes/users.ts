@@ -2,14 +2,16 @@ import { Router } from "express";
 import { authMiddleware } from "../middlewares/auth";
 import { userController } from "../controllers/userController";
 import upload from "../config/multer";
-import { bioValidator, dateOfBirthValidator, idValidator, locationValidator, optionalEmailValidator, optionalNameValidator } from "../middlewares/validators";
+import { bioValidator, bodyIdValidator, dateOfBirthValidator, idValidator, locationValidator, optionalEmailValidator, optionalNameValidator } from "../middlewares/validators";
 import { validationResultMiddleware } from "../middlewares/validationResult";
-import { postController } from "../controllers/postController";
 
 const usersRouter = Router();
 
-usersRouter.get('/:id', authMiddleware, idValidator, validationResultMiddleware, userController.getUserById);
+usersRouter.patch('/follow', authMiddleware, bodyIdValidator("followingId"), validationResultMiddleware, userController.follow);
 
+usersRouter.patch('/unfollow/:id', authMiddleware, idValidator, validationResultMiddleware, userController.unfollow);
+
+usersRouter.get('/:id', authMiddleware, idValidator, validationResultMiddleware, userController.getUserById);
 
 usersRouter.patch('/:id',
     authMiddleware,
@@ -17,6 +19,5 @@ usersRouter.patch('/:id',
     validationResultMiddleware,
     upload.single('avatar'),
     userController.updateUser);
-
 
 export default usersRouter;

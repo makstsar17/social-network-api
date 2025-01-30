@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
 import UserModel, { IUser } from "../models/UserModel";
 import { ServiceUserModel } from "./models/ServiceUserModel";
+import { transaction } from "./utils";
 
 function castDBUserModeltoServiceUserModel(userDoc: mongoose.HydratedDocument<IUser>): ServiceUserModel {
     return {
@@ -82,6 +83,22 @@ export const UserService = {
 
     deletePostIdInUser: async (userId: string, postId: string) => {
         await UserModel.findByIdAndUpdate(userId, { $pull: { posts: postId } });
+    },
+
+    addFollowingIdToUser: async (userId: string, followingId: string) => {
+        await transaction(async () => {
+            await UserModel.findByIdAndUpdate(userId, { $push: { following: followingId } });
+            await UserModel.findByIdAndUpdate(followingId, { $push: { followers: userId } });
+        });
+        return UserService.getUserById(userId);
+    },
+
+    deleteFollowingIdInUser: async(userId: string, followingId: string) => {
+        await transaction(async () => {
+            await UserModel.findByIdAndUpdate(userId, { $pull: { following: followingId } });
+            await UserModel.findByIdAndUpdate(followingId, { $pull: { followers: userId } });
+        });
+        return UserService.getUserById(userId);
     }
 
 }
