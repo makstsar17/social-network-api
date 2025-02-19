@@ -5,9 +5,11 @@ import usersRouter from "./routes/users";
 import { errorHandler } from "./middlewares/errors";
 import { postsRouter } from "./routes/posts";
 import { commentsRouter } from "./routes/comments";
+import cors from "cors";
 
 const app: Express = express();
 
+app.use(cors())
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieparser());
