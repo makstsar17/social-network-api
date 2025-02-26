@@ -232,7 +232,7 @@ export const userController = {
         }
 
         const user = await UserService.getUserById(req.user!.id);
-        if (user!.following.includes(req.params.id)){
+        if (user!.following.includes(req.params.id)) {
             res.status(HTTP_CODES.NOT_ALLOWED).send({
                 error: "User has already followed followingId"
             });
@@ -256,7 +256,7 @@ export const userController = {
         }
     },
 
-    unfollow: async (req: RequestWithParams<URIParamsFollowingIdModel>, res: ResponseWithError<ResponseUserModel>) => { 
+    unfollow: async (req: RequestWithParams<URIParamsFollowingIdModel>, res: ResponseWithError<ResponseUserModel>) => {
         const followedUser = await UserService.getUserById(req.params.id);
         if (!followedUser) {
             res.status(HTTP_CODES.NOT_FOUND).send({
@@ -266,7 +266,7 @@ export const userController = {
         }
 
         const user = await UserService.getUserById(req.user!.id);
-        if(!user!.following.includes(req.params.id)) {
+        if (!user!.following.includes(req.params.id)) {
             res.status(HTTP_CODES.NOT_ALLOWED).send({
                 error: "User doesn't follow followingId"
             });
@@ -282,6 +282,17 @@ export const userController = {
             });
         }
     },
+
+    getCurrentUser: async (req: Request, res: ResponseWithError<ResponseUserModel>) => {
+        try {
+            const user = await UserService.getUserById(req.user!.id);
+            res.status(HTTP_CODES.OK).send(castServiceUserModeltoResponseUserModel(user!));
+        } catch (err) {
+            res.status(HTTP_CODES.INTERNAL_SERVER_ERROR).send({
+                error: "Server error"
+            });
+        }
+    }
 }
 
 function deleteFile(fileUrl?: string) {

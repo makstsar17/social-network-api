@@ -9,7 +9,7 @@ const authRouter = express.Router();
 
 authRouter.post('/register', [emailValidator, passwordValidator, nameValidator], validationResultMiddleware, userController.register);
 
-authRouter.post('/login', [emailValidator, passwordValidator], validationResultMiddleware, userController.login);
+authRouter.post('/login', [emailValidator], validationResultMiddleware, userController.login);
 
 authRouter.post('/refresh-token', userController.refresh_token);
 

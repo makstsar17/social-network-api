@@ -11,6 +11,8 @@ usersRouter.patch('/follow/:id', authMiddleware, idValidator, validationResultMi
 
 usersRouter.patch('/unfollow/:id', authMiddleware, idValidator, validationResultMiddleware, userController.unfollow);
 
+usersRouter.get('/', authMiddleware, validationResultMiddleware, userController.getCurrentUser);
+
 usersRouter.get('/:id', authMiddleware, idValidator, validationResultMiddleware, userController.getUserById);
 
 usersRouter.patch('/:id',
