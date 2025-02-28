@@ -10,4 +10,5 @@ export const env = {
     JWT_REFRESH_SECRET_KEY: process.env.JWT_REFRESH_SECRET_KEY || "12345678",
     REDIS_URI: process.env.REDIS_URI || "",
     AVATAR_PATH: path.join(__dirname, "../../uploads"),
+    FRONTEND_URL: process.env.FRONTEND_URL || ""
 };
