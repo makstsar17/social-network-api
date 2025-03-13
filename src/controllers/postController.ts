@@ -1,6 +1,7 @@
 import { HTTP_CODES } from "../constants/httpCodes";
 import { ServicePostModel } from "../services/models/ServicePostModel";
 import { PostService } from "../services/PostService";
+import { UserService } from "../services/UserService";
 import { CreatePostModel } from "./models/CreatePostModel";
 import { QueryPostModel } from "./models/QueryPostModel";
 import { ResponsePostModel } from "./models/ResponsePostModel";
@@ -13,8 +14,8 @@ export const postController = {
     createPost: async (req: RequestWithBody<CreatePostModel>, res: ResponseWithError<ResponsePostModel>) => {
         try {
             const newPost = await PostService.createPost(req.user!.id, req.body.content);
-
-            res.status(HTTP_CODES.CREATED).send(newPost);
+            const result = await addUserInfo(newPost);
+            res.status(HTTP_CODES.CREATED).send(result);
         } catch (err) {
             res.status(HTTP_CODES.INTERNAL_SERVER_ERROR).send({
                 error: "Server error"
@@ -26,9 +27,13 @@ export const postController = {
         try {
             const posts = await PostService.getAllPostsForUser(req.user!.id);
 
-            const postsWithLikeInfo = posts.map(post => addLikeInfo(post, req.user!.id));
+            const result = await Promise.all(
+                posts.map(
+                    post => addUserAndLikeInfo(post, req.user!.id)
+                )
+            );
 
-            res.status(HTTP_CODES.OK).send(postsWithLikeInfo);
+            res.status(HTTP_CODES.OK).send(result);
         } catch (err) {
             res.status(HTTP_CODES.INTERNAL_SERVER_ERROR).send({
                 error: "Server error"
@@ -41,10 +46,13 @@ export const postController = {
             const filter = req.query;
 
             const posts = await PostService.getPostsWithFilter(filter);
+            const result = await Promise.all(
+                posts.map(
+                    post => addUserAndLikeInfo(post, req.user!.id)
+                )
+            );
 
-            const postsWithLikeInfo = posts.map(post => addLikeInfo(post, req.user!.id));
-
-            res.status(HTTP_CODES.OK).send(postsWithLikeInfo);
+            res.status(HTTP_CODES.OK).send(result);
 
         } catch (err) {
             res.status(HTTP_CODES.INTERNAL_SERVER_ERROR).send({
@@ -58,8 +66,13 @@ export const postController = {
             const posts = await PostService.getAllPostsByUser(req.user!.id);
 
             const postsWithLikeInfo = posts.map(post => addLikeInfo(post, req.user!.id));
+            const result = await Promise.all(
+                posts.map(
+                    post => addUserAndLikeInfo(post, req.user!.id)
+                )
+            );
 
-            res.status(HTTP_CODES.OK).send(postsWithLikeInfo);
+            res.status(HTTP_CODES.OK).send(result);
         } catch (err) {
             res.status(HTTP_CODES.INTERNAL_SERVER_ERROR).send({
                 error: "Server error"
@@ -76,9 +89,9 @@ export const postController = {
                 });
                 return;
             }
-            const postsWithLikeInfo = addLikeInfo(post!, req.user!.id);
+            const result = await addUserAndLikeInfo(post!, req.user!.id);
 
-            res.status(HTTP_CODES.OK).send(postsWithLikeInfo)
+            res.status(HTTP_CODES.OK).send(result);
         } catch (err) {
             res.status(HTTP_CODES.INTERNAL_SERVER_ERROR).send({
                 error: "Server error"
@@ -131,7 +144,8 @@ export const postController = {
 
         try {
             const likedPost = await PostService.addLikeToPost(req.params.id, req.user!.id);
-            res.status(HTTP_CODES.OK).send(likedPost);
+            const result = await addUserInfo(likedPost);
+            res.status(HTTP_CODES.OK).send(result);
         } catch (err) {
             res.status(HTTP_CODES.INTERNAL_SERVER_ERROR).send({
                 error: "Server error"
@@ -158,7 +172,8 @@ export const postController = {
 
         try {
             const likedPost = await PostService.deleteLikeInPost(req.params.id, req.user!.id);
-            res.status(HTTP_CODES.OK).send(likedPost);
+            const result = await addUserInfo(likedPost);
+            res.status(HTTP_CODES.OK).send(result);
         } catch (err) {
             res.status(HTTP_CODES.INTERNAL_SERVER_ERROR).send({
                 error: "Server error"
@@ -167,9 +182,30 @@ export const postController = {
     },
 };
 
-function addLikeInfo(post: ServicePostModel, userId: string): ResponsePostModel {
+function addLikeInfo(post: ServicePostModel, userId: string) {
     return {
         ...post,
         likedByUser: post.likes.includes(userId)
     }
+}
+
+async function addUserInfo (post: ServicePostModel) : Promise<ResponsePostModel> {
+    const user = await UserService.getUserById(post.userId);
+    if (!user) {
+        throw new Error(`Can't find user with id ${post.userId}`);
+    }
+    const {userId, ...result} = post;
+    return {
+        ...result,
+        user: {
+            id: user.id,
+            name: user.name,
+            email: user.email,
+            avatarUrl: user.avatarUrl
+        }
+    }
+}
+
+async function addUserAndLikeInfo (post: ServicePostModel, userId: string) : Promise<ResponsePostModel> {
+    return await addUserInfo(addLikeInfo(post, userId));
 }
