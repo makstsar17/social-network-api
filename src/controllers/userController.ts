@@ -40,12 +40,13 @@ export const userController = {
             const avatarName = `${randomUUID()}.png`
             const avatarPath = path.join(env.AVATAR_PATH, avatarName);
             const avatarPng = jdenticon.toPng(avatarName, 250);
+            const saveName = `${env.AVATAR_FOLDER}/${avatarName}`;
 
             fs.writeFile(avatarPath, avatarPng, (err) => {
                 if (err) console.error(err);
             });
 
-            const user = await UserService.addUser(req.body.name, req.body.email, hashedPassword, avatarName);
+            const user = await UserService.addUser(req.body.name, req.body.email, hashedPassword, saveName);
 
             res.status(HTTP_CODES.CREATED).send(castServiceUserModeltoResponseUserModel(user));
 

@@ -23,6 +23,8 @@ app.use('/users', usersRouter);
 app.use('/posts', postsRouter);
 app.use('/comments', commentsRouter);
 
+app.use('/uploads', express.static('uploads'))
+
 app.use(errorHandler);
 
 export default app;
