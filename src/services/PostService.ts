@@ -30,12 +30,12 @@ export const PostService = {
     },
 
     getAllPostsByUser: async (userId: string): Promise<ServicePostModel[]> => {
-        const posts = await PostModel.find({ userId }).exec();
+        const posts = await PostModel.find({ userId }).sort('-createdAt').exec();
         return posts.map(castDBPostModeltoServicePostModel);
     },
 
     getPostsWithFilter: async (filter: Object): Promise<ServicePostModel[]> => {
-        const posts = await PostModel.find(filter).exec();
+        const posts = await PostModel.find(filter).sort('-createdAt').exec();
         return posts.map(castDBPostModeltoServicePostModel);
     },
 
