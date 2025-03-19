@@ -14,7 +14,7 @@ export const postController = {
     createPost: async (req: RequestWithBody<CreatePostModel>, res: ResponseWithError<ResponsePostModel>) => {
         try {
             const newPost = await PostService.createPost(req.user!.id, req.body.content);
-            const result = await addUserInfo(newPost);
+            const result = await addAdditionalInfo(newPost);
             res.status(HTTP_CODES.CREATED).send(result);
         } catch (err) {
             res.status(HTTP_CODES.INTERNAL_SERVER_ERROR).send({
@@ -29,7 +29,7 @@ export const postController = {
 
             const result = await Promise.all(
                 posts.map(
-                    post => addUserAndLikeInfo(post, req.user!.id)
+                    post => addAdditionalInfo(post, req.user!.id)
                 )
             );
 
@@ -48,7 +48,7 @@ export const postController = {
             const posts = await PostService.getPostsWithFilter(filter);
             const result = await Promise.all(
                 posts.map(
-                    post => addUserAndLikeInfo(post, req.user!.id)
+                    post => addAdditionalInfo(post, req.user!.id)
                 )
             );
 
@@ -65,10 +65,9 @@ export const postController = {
         try {
             const posts = await PostService.getAllPostsByUser(req.user!.id);
 
-            const postsWithLikeInfo = posts.map(post => addLikeInfo(post, req.user!.id));
             const result = await Promise.all(
                 posts.map(
-                    post => addUserAndLikeInfo(post, req.user!.id)
+                    post => addAdditionalInfo(post, req.user!.id)
                 )
             );
 
@@ -89,7 +88,7 @@ export const postController = {
                 });
                 return;
             }
-            const result = await addUserAndLikeInfo(post!, req.user!.id);
+            const result = await addAdditionalInfo(post!, req.user!.id);
 
             res.status(HTTP_CODES.OK).send(result);
         } catch (err) {
@@ -144,7 +143,7 @@ export const postController = {
 
         try {
             const likedPost = await PostService.addLikeToPost(req.params.id, req.user!.id);
-            const result = await addUserInfo(likedPost);
+            const result = await addAdditionalInfo(likedPost, req.user!.id);
             res.status(HTTP_CODES.OK).send(result);
         } catch (err) {
             res.status(HTTP_CODES.INTERNAL_SERVER_ERROR).send({
@@ -172,7 +171,7 @@ export const postController = {
 
         try {
             const likedPost = await PostService.deleteLikeInPost(req.params.id, req.user!.id);
-            const result = await addUserInfo(likedPost);
+            const result = await addAdditionalInfo(likedPost, req.user!.id);
             res.status(HTTP_CODES.OK).send(result);
         } catch (err) {
             res.status(HTTP_CODES.INTERNAL_SERVER_ERROR).send({
@@ -182,21 +181,15 @@ export const postController = {
     },
 };
 
-function addLikeInfo(post: ServicePostModel, userId: string) {
-    return {
-        ...post,
-        likedByUser: post.likes.includes(userId)
-    }
-}
-
-async function addUserInfo (post: ServicePostModel) : Promise<ResponsePostModel> {
+async function addAdditionalInfo(post: ServicePostModel, checkId?: string): Promise<ResponsePostModel> {
     const user = await UserService.getUserById(post.userId);
     if (!user) {
         throw new Error(`Can't find user with id ${post.userId}`);
     }
-    const {userId, ...result} = post;
+    const { userId, ...result } = post;
     return {
         ...result,
+        likedByUser: checkId ? post.likes.includes(checkId) : false,
         user: {
             id: user.id,
             name: user.name,
@@ -204,8 +197,4 @@ async function addUserInfo (post: ServicePostModel) : Promise<ResponsePostModel>
             avatarUrl: user.avatarUrl
         }
     }
-}
-
-async function addUserAndLikeInfo (post: ServicePostModel, userId: string) : Promise<ResponsePostModel> {
-    return await addUserInfo(addLikeInfo(post, userId));
 }

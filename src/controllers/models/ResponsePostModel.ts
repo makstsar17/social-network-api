@@ -10,5 +10,5 @@ export type ResponsePostModel = {
     likes: string[],
     comments: string[],
     createdAt: Date,
-    likedByUser?: boolean
+    likedByUser: boolean
 };
