@@ -2,6 +2,7 @@ import mongoose, { ClientSession, HydratedDocument } from "mongoose";
 import PostModel, { IPost } from "../models/PostModel"
 import { ServicePostModel } from "./models/ServicePostModel";
 import { UserService } from "./UserService";
+import { CommentService } from "./CommentService";
 
 function castDBPostModeltoServicePostModel(post: HydratedDocument<IPost>): ServicePostModel {
     return {
@@ -52,9 +53,13 @@ export const PostService = {
         session.startTransaction();
         try {
             const post = await PostModel.findByIdAndDelete(postId).exec();
-            await UserService.deletePostIdInUser(post!.userId.toString(), post!._id.toString());
-
-            //delete comments
+            if (!post) return;
+            await UserService.deletePostIdInUser(post.userId.toString(), post._id.toString());
+            Promise.all(
+                post.comments.map(
+                    async (commentId) => await CommentService.deleteComment(commentId.toString())
+                )
+            );
 
             await session.commitTransaction();
         } catch (err) {
