@@ -35,7 +35,7 @@ export const CommentService = {
         try {
             const comment = await CommentModel.findByIdAndDelete(commentId);
             await PostService.deleteCommentInPost(commentId, comment!.postId.toString());
-
+    
             session.commitTransaction();
         } catch (err) {
             session.abortTransaction();
@@ -43,5 +43,10 @@ export const CommentService = {
         } finally {
             session.endSession();
         }
+    },
+
+    getCommentsWithFilter: async (filter: Object): Promise<ServiceCommentModel[]> => {
+        const comments = await CommentModel.find(filter).exec();
+        return comments.map(castDBCommentModelToServiceCommentModel);
     }
 }

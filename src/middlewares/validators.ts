@@ -83,3 +83,9 @@ export const bodyIdValidator = (name: string) => body(name)
     .isString()
     .isLength({ min: 24, max: 24 })
     .withMessage(`Request must include ${name}`);
+
+export const postIdQueryValidator = query("postId")
+    .optional()
+    .isString()
+    .isLength({ min: 24, max: 24 })
+    .withMessage("Invaild postId in query");

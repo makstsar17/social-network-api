@@ -4,9 +4,10 @@ import { ServiceCommentModel } from "../services/models/ServiceCommentModel";
 import { PostService } from "../services/PostService";
 import { UserService } from "../services/UserService";
 import { CreateCommentModel } from "./models/CreateCommentModel";
+import { QueryCommentModel } from "./models/QueryCommentModel";
 import { ResponseCommentModel } from "./models/ResponseCommentModel";
 import { URIParamsCommentIdModel } from "./models/URIParamsCommentIdModel";
-import { RequestWithBody, RequestWithParams } from "./types/requestTypes";
+import { RequestWithBody, RequestWithParams, RequestWithQuery } from "./types/requestTypes";
 import { ResponseWithError } from "./types/responseTypes";
 
 
@@ -48,6 +49,22 @@ export const commentController = {
         try {
             await CommentService.deleteComment(req.params.id);
             res.status(HTTP_CODES.NO_CONTENT);
+        } catch (err) {
+            res.status(HTTP_CODES.INTERNAL_SERVER_ERROR).send({
+                error: "Server error"
+            });
+        }
+    },
+
+    getComments: async (req: RequestWithQuery<QueryCommentModel>, res: ResponseWithError<ResponseCommentModel[]>) => {
+        try {
+            const filter = req.query;
+            const comments = await CommentService.getCommentsWithFilter(filter);
+            const result = await Promise.all( comments.map(
+                (comment) => addAdditionalInfo(comment)
+            ))
+
+            res.status(HTTP_CODES.CREATED).send(result);
         } catch (err) {
             res.status(HTTP_CODES.INTERNAL_SERVER_ERROR).send({
                 error: "Server error"
