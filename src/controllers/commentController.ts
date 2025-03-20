@@ -48,7 +48,7 @@ export const commentController = {
 
         try {
             await CommentService.deleteComment(req.params.id);
-            res.status(HTTP_CODES.NO_CONTENT);
+            res.sendStatus(HTTP_CODES.NO_CONTENT);
         } catch (err) {
             res.status(HTTP_CODES.INTERNAL_SERVER_ERROR).send({
                 error: "Server error"
