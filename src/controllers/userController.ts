@@ -187,6 +187,14 @@ export const userController = {
         const id = req.params.id;
         const { email, name, dateOfBirth, bio, location } = req.body;
         const file = req.file;
+
+        if (!req.file && !Object.keys(req.body).length){
+            res.status(HTTP_CODES.BAD_REQUEST).send({
+                error: "No data provided for update"
+            });
+            return;
+        }
+
         if (id !== req.user!.id) {
             res.status(HTTP_CODES.FORBIDDEN).send({
                 error: "Not allowed"
@@ -205,11 +213,11 @@ export const userController = {
         }
 
         try {
-            const oldFileName = (await UserService.getUserAvatarUrl(id));
+            const oldFileName = (await UserService.getUserAvatarUrl(id))?.split("/")[1];
 
-            const user = await UserService.updateUser(id, { email, name, dateOfBirth, bio, location, avatarUrl: file?.filename });
+            const user = await UserService.updateUser(id, { email, name, dateOfBirth, bio, location, avatarUrl: `${env.AVATAR_FOLDER}/${file?.filename}` });
 
-            if (user?.avatarUrl === file?.filename) {
+            if (file) {
                 deleteFile(path.join(env.AVATAR_PATH, oldFileName!));
             }
 
