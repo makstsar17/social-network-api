@@ -215,7 +215,13 @@ export const userController = {
         try {
             const oldFileName = (await UserService.getUserAvatarUrl(id))?.split("/")[1];
 
-            const user = await UserService.updateUser(id, { email, name, dateOfBirth, bio, location, avatarUrl: `${env.AVATAR_FOLDER}/${file?.filename}` });
+            const user = await UserService.updateUser(id, { 
+                email, 
+                name, 
+                dateOfBirth, 
+                bio, 
+                location, 
+                avatarUrl: file && `${env.AVATAR_FOLDER}/${file?.filename}` });
 
             if (file) {
                 deleteFile(path.join(env.AVATAR_PATH, oldFileName!));
