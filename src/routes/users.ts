@@ -7,6 +7,17 @@ import { validationResultMiddleware } from "../middlewares/validationResult";
 
 const usersRouter = Router();
 
+usersRouter.get('/followers',
+    authMiddleware,
+    validationResultMiddleware,
+    (req, res) => userController.getFollowersOrFollowing(req, res, "followers"));
+
+
+usersRouter.get('/followings',
+    authMiddleware,
+    validationResultMiddleware,
+    (req, res) => userController.getFollowersOrFollowing(req, res, "followings"));
+
 usersRouter.patch('/follow/:id', authMiddleware, idValidator, validationResultMiddleware, userController.follow);
 
 usersRouter.patch('/unfollow/:id', authMiddleware, idValidator, validationResultMiddleware, userController.unfollow);

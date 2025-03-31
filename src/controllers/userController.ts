@@ -188,7 +188,7 @@ export const userController = {
         const { email, name, dateOfBirth, bio, location } = req.body;
         const file = req.file;
 
-        if (!req.file && !Object.keys(req.body).length){
+        if (!req.file && !Object.keys(req.body).length) {
             res.status(HTTP_CODES.BAD_REQUEST).send({
                 error: "No data provided for update"
             });
@@ -215,13 +215,14 @@ export const userController = {
         try {
             const oldFileName = (await UserService.getUserAvatarUrl(id))?.split("/")[1];
 
-            const user = await UserService.updateUser(id, { 
-                email, 
-                name, 
-                dateOfBirth, 
-                bio, 
-                location, 
-                avatarUrl: file && `${env.AVATAR_FOLDER}/${file?.filename}` });
+            const user = await UserService.updateUser(id, {
+                email,
+                name,
+                dateOfBirth,
+                bio,
+                location,
+                avatarUrl: file && `${env.AVATAR_FOLDER}/${file?.filename}`
+            });
 
             if (file) {
                 deleteFile(path.join(env.AVATAR_PATH, oldFileName!));
@@ -302,6 +303,41 @@ export const userController = {
         try {
             const user = await UserService.getUserById(req.user!.id);
             res.status(HTTP_CODES.OK).send(castServiceUserModeltoResponseUserModel(user!));
+        } catch (err) {
+            res.status(HTTP_CODES.INTERNAL_SERVER_ERROR).send({
+                error: "Server error"
+            });
+        }
+    },
+
+    getFollowersOrFollowing: async (req: Request, res: ResponseWithError<ResponseUserModel[]>, type: "followers" | "followings") => {
+        try {
+            const currentUser = await UserService.getUserById(req.user!.id);
+            if (!currentUser) {
+                res.status(HTTP_CODES.NOT_FOUND).send({
+                    error: "User not found"
+                })
+                return;
+            }
+            const sendUsers = type === "followers" ? currentUser.followers : currentUser.following;
+
+            const sendData = await Promise.all(
+                sendUsers.map(
+                    async (userId) => await UserService.getUserById(userId)
+                )
+            ).then(
+                (users) => users.filter((user) => !!user)
+            ).then(
+                (users) => Promise.all(
+                    users.map(async (user) => {
+                        const isFollowing = type === "followers" ? await UserService.checkFollowersIncludeId(user.id, currentUser.id) : true;
+                        return castServiceUserModeltoResponseUserModel(user, isFollowing);
+                    })
+                )
+            );
+
+            res.status(HTTP_CODES.OK).send(sendData);
+            return;
         } catch (err) {
             res.status(HTTP_CODES.INTERNAL_SERVER_ERROR).send({
                 error: "Server error"
